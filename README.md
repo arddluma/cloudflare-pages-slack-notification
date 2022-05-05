@@ -12,7 +12,7 @@ Wait for Cloudflare Pages build to finish and send Slack notification
     apiKey: ${{ secrets.CF_API_KEY  }}
     accountId: ${{ secrets.CF_ACC_ID  }}
     # CloudFlare Pages project name
-    project: ${{ secrets.CF_PROJECT  }}
+    project: ${{ secrets.CF_PAGES_PROJECT  }}
     # Add this if you want GitHub Deployments (see below)
     githubToken: ${{ secrets.GITHUB_TOKEN }}
     # Create Slack Incoming webhook and add as variable https://hooks.slack.com/...
