@@ -1,5 +1,5 @@
 # CloudFlare Pages Slack notification
-## Using [CF Pages Await](https://github.com/WalshyDev/cf-pages-await) made by Daniel Walsh ([WalshyDev)])(https://github.com/WalshyDev)
+## Using [CF Pages Await](https://github.com/WalshyDev/cf-pages-await) made by Daniel Walsh [WalshyDev](https://github.com/WalshyDev)
 
 Wait for Cloudflare Pages build to finish and send Slack notification
 
