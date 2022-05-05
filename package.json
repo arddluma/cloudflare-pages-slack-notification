@@ -1,0 +1,23 @@
+{
+  "name": "cf-pages-await",
+  "version": "1.0.1",
+  "description": "Wait for a Cloudflare Pages build to finish and send Slack notification",
+  "main": "index.js",
+  "keywords": [],
+  "author": "arddluma",
+  "license": "MIT",
+  "scripts": {
+    "build": "esbuild src/action.ts --platform=node --target=es2019 --bundle --outfile=dist/action.js"
+  },
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.0",
+    "node-fetch": "^3.0.0",
+    "slack-notify": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "esbuild": "^0.13.9",
+    "typescript": "^4.4.4"
+  }
+}
