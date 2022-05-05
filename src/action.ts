@@ -59,9 +59,6 @@ export default async function run() {
     }
 
     if (latestStage.name === 'deploy' && ['success', 'failed'].includes(latestStage.status)) {
-      waiting = false;
-
-      const aliasUrl = deployment.aliases && deployment.aliases.length > 0 ? deployment.aliases[0] : deployment.url;
       if (latestStage.status === 'success') {
         slack.send(`CloudFlare Pages for project ${project} succedded\nDeployment ID: ${deployment.id}\nDeployment URL: ${deployment.url}`).then(() => {
           console.log('Slack message sent!');
@@ -77,6 +74,8 @@ export default async function run() {
           console.error(err);
         });
       }
+      waiting = false;
+      const aliasUrl = deployment.aliases && deployment.aliases.length > 0 ? deployment.aliases[0] : deployment.url;
       // Set outputs
       core.setOutput('id', deployment.id);
       core.setOutput('environment', deployment.environment);
