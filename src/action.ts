@@ -55,7 +55,7 @@ export default async function run() {
 
     if (latestStage.name === 'deploy' && ['success', 'failed'].includes(latestStage.status)) {
       if (latestStage.status === 'success') {
-        slack.send(`CloudFlare Pages for project ${project} SUCCEEDED!\nEnvironment: ${deployment.environment}\nDeployment ID: ${deployment.id}\nDeployment URL: ${deployment.url}`).then(() => {
+        slack.success(`CloudFlare Pages for project ${project} SUCCEEDED!\nEnvironment: ${deployment.environment}\nDeployment ID: ${deployment.id}\nDeployment URL: ${deployment.url}`).then(() => {
           console.log('Slack message sent!');
         }).catch((err) => {
           console.error(err);
