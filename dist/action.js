@@ -11397,6 +11397,18 @@ async function run() {
         markedAsInProgress = true;
       }
     }
+    if (lastStage === "build") {
+      waiting = false;
+      core.setFailed(`Build failed on step: ${latestStage.name}!`);
+      slack.send(`CloudFlare Pages Build pipeline for project ${project} FAILED!
+Environment: ${deployment.environment}
+Deployment ID: ${deployment.id}`).then(() => {
+        console.log("Slack message for BUILD failed pipeline sent!");
+      }).catch((err) => {
+        console.error(err);
+      });
+      return;
+    }
     if (latestStage.status === "failed") {
       waiting = false;
       core.setFailed(`Deployment failed on step: ${latestStage.name}!`);
@@ -11404,25 +11416,6 @@ async function run() {
       return;
     }
     if (latestStage.name === "deploy" && ["success", "failed"].includes(latestStage.status)) {
-      if (latestStage.status === true && ["success"].includes(latestStage.status)) {
-        slack.send(`CloudFlare Pages pipeline for project ${project} SUCCEEDED!
-Environment: ${deployment.environment}
-Deployment ID: ${deployment.id}
-Deployment URL: ${deployment.url}`).then(() => {
-          console.log("Slack message for deployment succedded pipeline sent!");
-        }).catch((err) => {
-          console.error(err);
-        });
-      }
-      if (latestStage.status === true && ["failed"].includes(latestStage.status)) {
-        slack.send(`CloudFlare Pages pipeline for project ${project} FAILED!
-Environment: ${deployment.environment}
-Deployment ID: ${deployment.id}`).then(() => {
-          console.log("Slack message for deployment failed pipeline sent!");
-        }).catch((err) => {
-          console.error(err);
-        });
-      }
       waiting = false;
       const aliasUrl = deployment.aliases && deployment.aliases.length > 0 ? deployment.aliases[0] : deployment.url;
       core.setOutput("id", deployment.id);
@@ -11430,6 +11423,25 @@ Deployment ID: ${deployment.id}`).then(() => {
       core.setOutput("url", deployment.url);
       core.setOutput("alias", aliasUrl);
       core.setOutput("success", deployment.latest_stage.status === "success" ? true : false);
+      if (deployment.latest_stage.status === "success" && true) {
+        slack.send(`CloudFlare Pages Depolyment pipeline for project ${project} SUCCEEDED!
+Environment: ${deployment.environment}
+Deployment ID: ${deployment.id}
+Deployment URL: ${deployment.url}`).then(() => {
+          console.log("Slack message for DEPLOYMENT succedded pipeline sent!");
+        }).catch((err) => {
+          console.error(err);
+        });
+      }
+      if (deployment.latest_stage.status === "failed" && true) {
+        slack.send(`CloudFlare Pages Depolyment pipeline for project ${project} FAILED!
+Environment: ${deployment.environment}
+Deployment ID: ${deployment.id}`).then(() => {
+          console.log("Slack message for DEPLOYMENT failed pipeline sent!");
+        }).catch((err) => {
+          console.error(err);
+        });
+      }
       if (token !== "") {
         await updateDeployment(token, deployment, latestStage.status === "success" ? "success" : "failure");
       }
