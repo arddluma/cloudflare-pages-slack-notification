@@ -11404,7 +11404,7 @@ async function run() {
       return;
     }
     if (latestStage.name === "deploy" && ["success", "failed"].includes(latestStage.status)) {
-      if (latestStage.status === "success") {
+      if (latestStage.status === true && ["success"].includes(latestStage.status)) {
         slack.send(`CloudFlare Pages pipeline for project ${project} SUCCEEDED!
 Environment: ${deployment.environment}
 Deployment ID: ${deployment.id}
@@ -11414,7 +11414,7 @@ Deployment URL: ${deployment.url}`).then(() => {
           console.error(err);
         });
       }
-      if (latestStage.status === "failed") {
+      if (latestStage.status === true && ["failed"].includes(latestStage.status)) {
         slack.send(`CloudFlare Pages pipeline for project ${project} FAILED!
 Environment: ${deployment.environment}
 Deployment ID: ${deployment.id}`).then(() => {
