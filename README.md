@@ -6,7 +6,7 @@ Wait for Cloudflare Pages build to finish and send Slack notification
 ## Usage
 ```yml
 - name: Await CF Pages and send Slack notification
-  uses: arddluma/cf-pages-slack-notifications@v1.0.0
+  uses: arddluma/cf-pages-slack-notification@v2
   with:
     accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}
     apiKey: ${{ secrets.CF_API_KEY  }}
@@ -32,7 +32,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Wait for CF Pages
       id: cf-pages
-      uses: arddluma/cf-pages-slack-notifications@v1.0.0
+      uses: arddluma/cf-pages-slack-notification@v2
       with:
         accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}
         apiKey: ${{ secrets.CF_API_KEY  }}
