@@ -1,0 +1,42 @@
+name: 'Cloudflare Pages Slack Notification'
+description: 'Wait for Cloudflare Pages to build and send Slack notification'
+author: 'arddluma'
+inputs:
+  accountEmail:
+    description: 'Cloudflare account email (Needed for auth)'
+    required: true
+  apiKey:
+    description: 'Cloudflare API Key (Tokens aren''t supported in the API yet :( )'
+    required: true
+  accountId:
+    description: 'Cloudflare account ID'
+    required: true
+  project:
+    description: 'Pages project name'
+    required: true
+  githubToken:
+    description: 'GitHub Token to use for deployments (GITHUB_TOKEN secret or your own token!) - OPTIONAL (Only used for GitHub Deployments)'
+    required: false
+  commitHash:
+    description: 'The commit hash of the commit triggered the target deployment'
+    required: true
+  slackWebHook:
+    description: 'Slack incoming webhook url'
+    required: true
+outputs:
+  id:
+    description: 'Deployment ID'
+  environment:
+    description: 'Environment for this deployment, either "production" or "preview"'
+  url:
+    description: 'URL of the deployment'
+  alias:
+    description: 'Alias URL of the branch (for example: fix-navbar.project.pages.dev)'
+  success:
+    description: 'If the build passed or failed'
+runs:
+  using: 'node12'
+  main: 'dist/action.js'
+branding:
+  icon: 'cloud'
+  color: 'orange'
