@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Wait for CF Pages
+    - name: Await CF Pages and send Slack notification
       id: cf-pages
       uses: arddluma/cf-pages-slack-notification@v2
       with:
@@ -44,6 +44,16 @@ jobs:
         # Add this if you want GitHub Deployments (see below)
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+## Screenshots
+
+### If build phase fails:
+
+  ![Build Fails](.github/images/build-failed.png)
+
+### If deployment phase is successful:
+
+  ![Deployment Successful](.github/images/deployment-succeeded.png)
 
 ## Outputs
 * `id`          - Deployment ID, example: `50ff553c-da5d-4846-8188-25ae82a3bb7d`

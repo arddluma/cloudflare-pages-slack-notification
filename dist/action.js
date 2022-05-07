@@ -11400,9 +11400,10 @@ async function run() {
     if (lastStage === "build") {
       waiting = false;
       core.setFailed(`Build failed on step: ${latestStage.name}!`);
-      slack.send(`CloudFlare Pages Build pipeline for project ${project} FAILED!
-Environment: ${deployment.environment}
-Deployment ID: ${deployment.id}`).then(() => {
+      slack.send(`:x: CloudFlare Pages \`Build\` pipeline for project *${project}* \`FAILED\`!
+Environment: *${deployment.environment}*
+Deployment ID: *${deployment.id}*
+Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
         console.log("Slack message for BUILD failed pipeline sent!");
       }).catch((err) => {
         console.error(err);
@@ -11424,19 +11425,21 @@ Deployment ID: ${deployment.id}`).then(() => {
       core.setOutput("alias", aliasUrl);
       core.setOutput("success", deployment.latest_stage.status === "success" ? true : false);
       if (deployment.latest_stage.status === "success" && true) {
-        slack.send(`CloudFlare Pages Depolyment pipeline for project ${project} SUCCEEDED!
-Environment: ${deployment.environment}
-Deployment ID: ${deployment.id}
-Deployment URL: ${deployment.url}`).then(() => {
+        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!
+Environment: *${deployment.environment}*
+Deployment ID: *${deployment.id}*
+Deployment URL: ${deployment.url}
+Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log("Slack message for DEPLOYMENT succedded pipeline sent!");
         }).catch((err) => {
           console.error(err);
         });
       }
       if (deployment.latest_stage.status === "failed" && true) {
-        slack.send(`CloudFlare Pages Depolyment pipeline for project ${project} FAILED!
-Environment: ${deployment.environment}
-Deployment ID: ${deployment.id}`).then(() => {
+        slack.send(`:x: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`FAILED\`!
+Environment: *${deployment.environment}*
+Deployment ID: *${deployment.id}*
+Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log("Slack message for DEPLOYMENT failed pipeline sent!");
         }).catch((err) => {
           console.error(err);
