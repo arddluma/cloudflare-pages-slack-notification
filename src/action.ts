@@ -46,19 +46,13 @@ export default async function run() {
       }
     }
 
-    if (lastStage === 'build') {
+    if (latestStage.status === 'failure') {
       waiting = false;
-      core.setFailed(`Build failed on step: ${latestStage.name}!`);
-      slack.send(`:x: CloudFlare Pages \`Build\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
-        console.log('Slack message for BUILD failed pipeline sent!');
+      slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
+        console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
       }).catch((err) => {
         console.error(err);
       });
-      return;
-    }
-
-    if (latestStage.status === 'failed') {
-      waiting = false;
       core.setFailed(`Deployment failed on step: ${latestStage.name}!`);
       await updateDeployment(token, deployment, 'failure');
       return;
@@ -82,13 +76,6 @@ export default async function run() {
         });
       }
 
-      if (deployment.latest_stage.status === 'failed' && true) {
-        slack.send(`:x: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
-          console.log('Slack message for DEPLOYMENT failed pipeline sent!');
-        }).catch((err) => {
-          console.error(err);
-        });
-      }
 
       // Update deployment (if enabled)
       if (token !== '') {

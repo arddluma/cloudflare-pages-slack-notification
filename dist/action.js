@@ -11397,21 +11397,16 @@ async function run() {
         markedAsInProgress = true;
       }
     }
-    if (lastStage === "build") {
+    if (latestStage.status === "failure") {
       waiting = false;
-      core.setFailed(`Build failed on step: ${latestStage.name}!`);
-      slack.send(`:x: CloudFlare Pages \`Build\` pipeline for project *${project}* \`FAILED\`!
+      slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!
 Environment: *${deployment.environment}*
 Deployment ID: *${deployment.id}*
 Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
-        console.log("Slack message for BUILD failed pipeline sent!");
+        console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
       }).catch((err) => {
         console.error(err);
       });
-      return;
-    }
-    if (latestStage.status === "failed") {
-      waiting = false;
       core.setFailed(`Deployment failed on step: ${latestStage.name}!`);
       await updateDeployment(token, deployment, "failure");
       return;
@@ -11431,16 +11426,6 @@ Deployment ID: *${deployment.id}*
 Deployment URL: ${deployment.url}
 Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log("Slack message for DEPLOYMENT succedded pipeline sent!");
-        }).catch((err) => {
-          console.error(err);
-        });
-      }
-      if (deployment.latest_stage.status === "failed" && true) {
-        slack.send(`:x: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`FAILED\`!
-Environment: *${deployment.environment}*
-Deployment ID: *${deployment.id}*
-Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
-          console.log("Slack message for DEPLOYMENT failed pipeline sent!");
         }).catch((err) => {
           console.error(err);
         });
