@@ -19,7 +19,7 @@ export default async function run() {
   const project = core.getInput('project', { required: true, trimWhitespace: true });
   const token = core.getInput('githubToken', { required: false, trimWhitespace: true });
   const commitHash = core.getInput('commitHash', { required: false, trimWhitespace: true });
-  const slackWebHook = core.getInput('slackWebHook', { required: true, trimWhitespace: true });
+  const slackWebHook = core.getInput('slackWebHook', { required: false, trimWhitespace: true });
   const slack = SlackNotify(slackWebHook);
 
   console.log('Waiting for Pages to finish building...');

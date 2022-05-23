@@ -22,7 +22,7 @@ inputs:
     required: true
   slackWebHook:
     description: 'Slack incoming webhook url'
-    required: true
+    required: false
 outputs:
   id:
     description: 'Deployment ID'
