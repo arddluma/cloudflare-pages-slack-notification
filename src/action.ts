@@ -48,7 +48,7 @@ export default async function run() {
 
     if (latestStage.status === 'failure') {
       waiting = false;
-      slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
+      slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
         console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
       }).catch((err) => {
         console.error(err);
@@ -69,7 +69,7 @@ export default async function run() {
       core.setOutput('success', deployment.latest_stage.status === 'success' ? true : false);
 
       if (deployment.latest_stage.status === 'success' && true) {
-        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nDeployment ID: *${deployment.id}*\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
+        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log('Slack message for DEPLOYMENT succedded pipeline sent!');
         }).catch((err) => {
           console.error(err);
