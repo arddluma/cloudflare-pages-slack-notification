@@ -11427,6 +11427,7 @@ Environment: *${deployment.environment}*
 Commit: ${import_utils.context.payload.head_commit.url}
 Actor: *${import_utils.context.actor}*
 Deployment ID: *${deployment.id}*
+Alias URL: ${aliasUrl}
 Deployment URL: ${deployment.url}
 Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log("Slack message for DEPLOYMENT succedded pipeline sent!");

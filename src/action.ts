@@ -69,7 +69,7 @@ export default async function run() {
       core.setOutput('success', deployment.latest_stage.status === 'success' ? true : false);
 
       if (deployment.latest_stage.status === 'success' && true) {
-        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
+        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nAlias URL: ${aliasUrl}\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log('Slack message for DEPLOYMENT succedded pipeline sent!');
         }).catch((err) => {
           console.error(err);

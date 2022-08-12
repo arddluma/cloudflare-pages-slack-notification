@@ -1,6 +1,6 @@
 {
     "name": "cf-pages-await",
-    "version": "2.0.2",
+    "version": "2.0.4",
     "description": "Wait for a Cloudflare Pages build to finish and send Slack notification",
     "main": "index.js",
     "keywords": [],
