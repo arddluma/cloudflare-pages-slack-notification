@@ -10,7 +10,7 @@
         "build": "esbuild src/action.ts --platform=node --target=es2019 --bundle --outfile=dist/action.js"
     },
     "dependencies": {
-        "@actions/core": "^1.6.0",
+        "@actions/core": "^1.9.1",
         "@actions/github": "^5.0.0",
         "node-fetch": "^3.0.0",
         "slack-notify": "^2.0.2"
