@@ -29,7 +29,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Await CF Pages and send Slack notification
       id: cf-pages
       uses: arddluma/cloudflare-pages-slack-notification@v2.5
