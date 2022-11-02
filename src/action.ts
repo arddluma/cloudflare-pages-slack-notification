@@ -45,7 +45,7 @@ export default async function run() {
       }
     }
 
-    if (latestStage.status === 'failed') {
+    if (latestStage.status === 'failed' || latestStage.status === 'failure') {
       waiting = false;
       slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
         console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
