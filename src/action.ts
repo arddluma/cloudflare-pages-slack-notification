@@ -3,12 +3,11 @@ import * as github from '@actions/github';
 import fetch, { Response } from 'node-fetch';
 
 import { context } from '@actions/github/lib/utils';
-import { ApiResponse, Deployment } from './types';
 
 import SlackNotify from 'slack-notify';
 
 let waiting = true;
-let ghDeployment;
+let ghDeployment: any;
 let markedAsInProgress = false;
 import { ApiResponse, Deployment } from './types';
 
@@ -46,7 +45,7 @@ export default async function run() {
       }
     }
 
-    if (latestStage.status === 'failure') {
+    if (latestStage.status === 'failed') {
       waiting = false;
       slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
         console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
@@ -68,8 +67,8 @@ export default async function run() {
       core.setOutput('alias', aliasUrl);
       core.setOutput('success', deployment.latest_stage.status === 'success' ? true : false);
 
-      if (deployment.latest_stage.status === 'success' && true) {
-        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nAlias URL: ${aliasUrl}\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
+      if (deployment.latest_stage.status === 'success') {
+        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload?.head_commit?.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nAlias URL: ${aliasUrl}\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log('Slack message for DEPLOYMENT succedded pipeline sent!');
         }).catch((err) => {
           console.error(err);
@@ -178,7 +177,7 @@ async function updateDeployment(token: string, deployment: Deployment, state: 's
 
 try {
   run();
-} catch(e) {
+} catch(e: any) {
   console.error('Please report this! Issues: https://github.com/WalshyDev/cf-pages-await/issues')
   core.setFailed(e);
   console.error(e.message + '\n' + e.stack);
