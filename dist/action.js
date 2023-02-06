@@ -12767,19 +12767,24 @@ var waiting = true;
 var ghDeployment;
 var markedAsInProgress = false;
 async function run() {
-  const accountEmail = core.getInput("accountEmail", { required: true, trimWhitespace: true });
-  const apiKey = core.getInput("apiKey", { required: true, trimWhitespace: true });
+  const accountEmail = core.getInput("accountEmail", { required: false, trimWhitespace: true });
+  const apiKey = core.getInput("apiKey", { required: false, trimWhitespace: true });
+  const apiToken = core.getInput("apiToken", { required: false, trimWhitespace: true });
   const accountId = core.getInput("accountId", { required: true, trimWhitespace: true });
   const project = core.getInput("project", { required: true, trimWhitespace: true });
   const token = core.getInput("githubToken", { required: false, trimWhitespace: true });
   const commitHash = core.getInput("commitHash", { required: false, trimWhitespace: true });
   const slackWebHook = core.getInput("slackWebHook", { required: false, trimWhitespace: true });
   const slack = esm_default(slackWebHook);
+  if (!validateAuthInputs(apiToken, accountEmail, apiKey)) {
+    return;
+  }
+  const authHeaders = apiToken !== "" ? { Authorization: `Bearer ${apiToken}` } : { "X-Auth-Email": accountEmail, "X-Auth-Key": apiKey };
   console.log("Waiting for Pages to finish building...");
   let lastStage = "";
   while (waiting) {
     await sleep();
-    const deployment = await pollApi(accountEmail, apiKey, accountId, project, commitHash);
+    const deployment = await pollApi(authHeaders, accountId, project, commitHash);
     if (!deployment) {
       console.log("Waiting for the deployment to start...");
       continue;
@@ -12793,7 +12798,7 @@ async function run() {
         markedAsInProgress = true;
       }
     }
-    if (latestStage.status === "failure") {
+    if (latestStage.status === "failed" || latestStage.status === "failure") {
       waiting = false;
       slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!
 Environment: *${deployment.environment}*
@@ -12837,16 +12842,23 @@ Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.p
     }
   }
 }
-async function pollApi(accountEmail, apiKey, accountId, project, commitHash) {
+function validateAuthInputs(token, email, key) {
+  if (token !== "") {
+    return true;
+  }
+  if (email !== "" && key !== "") {
+    return true;
+  }
+  core.setFailed("Please specify authentication details! Set either `apiToken` or `accountEmail` + `accountKey`!");
+  return false;
+}
+async function pollApi(authHeaders, accountId, project, commitHash) {
   var _a2, _b, _c;
   let res;
   let body;
   try {
     res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${project}/deployments?sort_by=created_on&sort_order=desc`, {
-      headers: {
-        "X-Auth-Email": accountEmail,
-        "X-Auth-Key": apiKey
-      }
+      headers: { ...authHeaders }
     });
   } catch (e) {
     core.error(`Failed to send request to CF API - network issue? ${e.message}`);

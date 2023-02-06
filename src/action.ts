@@ -3,24 +3,32 @@ import * as github from '@actions/github';
 import fetch, { Response } from 'node-fetch';
 
 import { context } from '@actions/github/lib/utils';
-import { ApiResponse, Deployment } from './types';
-
+import { ApiResponse, AuthHeaders, Deployment } from './types';
 import SlackNotify from 'slack-notify';
 
 let waiting = true;
+// @ts-ignore - Typing GitHub's responses is a pain in the ass
 let ghDeployment;
 let markedAsInProgress = false;
-import { ApiResponse, Deployment } from './types';
 
 export default async function run() {
-  const accountEmail = core.getInput('accountEmail', { required: true, trimWhitespace: true });
-  const apiKey = core.getInput('apiKey', { required: true, trimWhitespace: true });
+  const accountEmail = core.getInput('accountEmail', { required: false, trimWhitespace: true });
+  const apiKey = core.getInput('apiKey', { required: false, trimWhitespace: true });
+  const apiToken = core.getInput('apiToken', { required: false, trimWhitespace: true })
+
   const accountId = core.getInput('accountId', { required: true, trimWhitespace: true });
   const project = core.getInput('project', { required: true, trimWhitespace: true });
   const token = core.getInput('githubToken', { required: false, trimWhitespace: true });
   const commitHash = core.getInput('commitHash', { required: false, trimWhitespace: true });
   const slackWebHook = core.getInput('slackWebHook', { required: false, trimWhitespace: true });
   const slack = SlackNotify(slackWebHook);
+
+  // Validate we have either token or both email + key
+  if (!validateAuthInputs(apiToken, accountEmail, apiKey)) {
+    return;
+  }
+
+  const authHeaders: AuthHeaders = apiToken !== '' ? { Authorization: `Bearer ${apiToken}` } : { 'X-Auth-Email': accountEmail, 'X-Auth-Key': apiKey };
 
   console.log('Waiting for Pages to finish building...');
   let lastStage = '';
@@ -29,7 +37,7 @@ export default async function run() {
     // We want to wait a few seconds, don't want to spam the API :)
     await sleep();
 
-    const deployment: Deployment|undefined = await pollApi(accountEmail, apiKey, accountId, project, commitHash);
+    const deployment: Deployment|undefined = await pollApi(authHeaders, accountId, project, commitHash);
     if (!deployment) {
       console.log('Waiting for the deployment to start...');
       continue;
@@ -40,13 +48,14 @@ export default async function run() {
     if (latestStage.name !== lastStage) {
       lastStage = deployment.latest_stage.name;
       console.log('# Now at stage: ' + lastStage);
+
       if (!markedAsInProgress) {
         await updateDeployment(token, deployment, 'in_progress');
         markedAsInProgress = true;
       }
     }
 
-    if (latestStage.status === 'failure') {
+    if (latestStage.status === 'failed' || latestStage.status === 'failure') {
       waiting = false;
       slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
         console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
@@ -60,7 +69,9 @@ export default async function run() {
 
     if (latestStage.name === 'deploy' && ['success', 'failed'].includes(latestStage.status)) {
       waiting = false;
+
       const aliasUrl = deployment.aliases && deployment.aliases.length > 0 ? deployment.aliases[0] : deployment.url;
+
       // Set outputs
       core.setOutput('id', deployment.id);
       core.setOutput('environment', deployment.environment);
@@ -75,8 +86,6 @@ export default async function run() {
           console.error(err);
         });
       }
-
-
       // Update deployment (if enabled)
       if (token !== '') {
         await updateDeployment(token, deployment, latestStage.status === 'success' ? 'success' : 'failure');
@@ -85,7 +94,20 @@ export default async function run() {
   }
 }
 
-async function pollApi(accountEmail: string, apiKey: string, accountId: string, project: string, commitHash: string): Promise<Deployment|undefined> {
+function validateAuthInputs(token: string, email: string, key: string) {
+  if (token !==  '') {
+    return true;
+  }
+
+  if (email !== '' && key !== '') {
+    return true;
+  }
+
+  core.setFailed('Please specify authentication details! Set either `apiToken` or `accountEmail` + `accountKey`!');
+  return false;
+}
+
+async function pollApi(authHeaders: AuthHeaders, accountId: string, project: string, commitHash: string): Promise<Deployment|undefined> {
   // curl -X GET "https://api.cloudflare.com/client/v4/accounts/:account_id/pages/projects/:project_name/deployments" \
   //   -H "X-Auth-Email: user@example.com" \
   //   -H "X-Auth-Key: c2547eb745079dac9320b638f5e225cf483cc5cfdda41"
@@ -94,10 +116,7 @@ async function pollApi(accountEmail: string, apiKey: string, accountId: string, 
   // Try and fetch, may fail due to a network issue
   try {
     res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${project}/deployments?sort_by=created_on&sort_order=desc`, {
-      headers: {
-        'X-Auth-Email': accountEmail,
-        'X-Auth-Key': apiKey,
-      }
+      headers: { ...authHeaders },
     });
   } catch(e) {
     // @ts-ignore
@@ -147,6 +166,7 @@ async function updateDeployment(token: string, deployment: Deployment, state: 's
     repo: context.repo.repo,
   };
 
+  // @ts-ignore
   if (!ghDeployment) {
     const { data } = await octokit.rest.repos.createDeployment({
       ...sharedOptions,
@@ -179,7 +199,9 @@ async function updateDeployment(token: string, deployment: Deployment, state: 's
 try {
   run();
 } catch(e) {
-  console.error('Please report this! Issues: https://github.com/WalshyDev/cf-pages-await/issues')
+  console.error('Please report this! Issues: https://github.com/WalshyDev/cf-pages-await/issues');
+  // @ts-ignore
   core.setFailed(e);
+  // @ts-ignore
   console.error(e.message + '\n' + e.stack);
 }

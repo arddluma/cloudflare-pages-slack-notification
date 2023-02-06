@@ -3,13 +3,22 @@
 
 Wait for Cloudflare Pages build to finish and send Slack notification
 
+Recommended:
+Generate API Token go to https://dash.cloudflare.com/profile/api-tokens 
+`Create Custom Token`
+  ![Create CF Token](.github/images/create-cf-token.png)
+
+
 ## Usage
 ```yml
 - name: Await CF Pages and send Slack notification
-  uses: arddluma/cloudflare-pages-slack-notification@v2.5
+  uses: arddluma/cloudflare-pages-slack-notification@v3
   with:
-    accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}
-    apiKey: ${{ secrets.CF_API_KEY  }}
+    # Uncomment these two lines if you wish to use the Global API Key (Not recommended!)
+    # accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}
+    # apiKey: ${{ secrets.CF_API_KEY  }
+    # Use an API token (Recommended!)
+    apiToken: ${{ secrets.CF_API_TOKEN }}
     accountId: ${{ secrets.CF_ACC_ID  }}
     # CloudFlare Pages project name
     project: ${{ secrets.CF_PAGES_PROJECT  }}
@@ -32,10 +41,14 @@ jobs:
     - uses: actions/checkout@v3
     - name: Await CF Pages and send Slack notification
       id: cf-pages
-      uses: arddluma/cloudflare-pages-slack-notification@v2.5
+      uses: arddluma/cloudflare-pages-slack-notification@v3
       with:
-        accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}
-        apiKey: ${{ secrets.CF_API_KEY  }}
+        # Uncomment these two lines if you wish to use the Global API Key (Not recommended!)
+        # accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}
+        # apiKey: ${{ secrets.CF_API_KEY  }}
+
+        # Use an API token (Recommended!)
+        apiToken: ${{ secrets.CF_API_TOKEN }}
         accountId: ${{ secrets.CF_ACC_ID  }}
         # CloudFlare Pages project name
         project: ${{ secrets.CF_PAGES_PROJECT  }}
