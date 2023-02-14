@@ -73,13 +73,7 @@ export default async function run() {
       await updateDeployment(token, deployment, 'failure');
       return;
     }
-
-    if (latestStage.status === 'skipped') {
-      waiting = false;
-      core.setOutput(`Deployment skipped ${latestStage.name}!`);
-      return;
-    }
-
+    
     if (latestStage.name === 'deploy' && ['success', 'failed'].includes(latestStage.status)) {
       waiting = false;
 
