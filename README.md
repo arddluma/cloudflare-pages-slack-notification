@@ -12,7 +12,7 @@ Generate API Token go to https://dash.cloudflare.com/profile/api-tokens
 ## Usage
 ```yml
 - name: Await CF Pages and send Slack notification
-  uses: arddluma/cloudflare-pages-slack-notification@v3
+  uses: arddluma/cloudflare-pages-slack-notification@v3.1
   with:
     # Uncomment these two lines if you wish to use the Global API Key (Not recommended!)
     # accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}
@@ -41,7 +41,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Await CF Pages and send Slack notification
       id: cf-pages
-      uses: arddluma/cloudflare-pages-slack-notification@v3
+      uses: arddluma/cloudflare-pages-slack-notification@v3.1
       with:
         # Uncomment these two lines if you wish to use the Global API Key (Not recommended!)
         # accountEmail: ${{ secrets.CF_ACCOUNT_EMAIL  }}

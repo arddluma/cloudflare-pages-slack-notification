@@ -43,6 +43,13 @@ export default async function run() {
       continue;
     }
 
+    if (deployment.is_skipped === true) {
+      waiting = false;
+      console.log(`Deployment skipped ${deployment.id}!`);
+      core.setOutput(`Deployment skipped ${deployment.id}!`);
+      return;
+    }
+
     const latestStage = deployment.latest_stage;
 
     if (latestStage.name !== lastStage) {
@@ -64,6 +71,12 @@ export default async function run() {
       });
       core.setFailed(`Deployment failed on step: ${latestStage.name}!`);
       await updateDeployment(token, deployment, 'failure');
+      return;
+    }
+
+    if (latestStage.status === 'skipped') {
+      waiting = false;
+      core.setOutput(`Deployment skipped ${latestStage.name}!`);
       return;
     }
 

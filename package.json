@@ -1,6 +1,6 @@
 {
     "name": "cloudflare-pages-slack-notification",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "description": "Wait for a Cloudflare Pages build to finish and send Slack notification",
     "main": "index.js",
     "keywords": [],

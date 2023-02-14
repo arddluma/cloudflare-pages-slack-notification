@@ -12789,6 +12789,12 @@ async function run() {
       console.log("Waiting for the deployment to start...");
       continue;
     }
+    if (deployment.is_skipped === true) {
+      waiting = false;
+      console.log(`Deployment skipped ${deployment.id}!`);
+      core.setOutput(`Deployment skipped ${deployment.id}!`);
+      return;
+    }
     const latestStage = deployment.latest_stage;
     if (latestStage.name !== lastStage) {
       lastStage = deployment.latest_stage.name;
@@ -12812,6 +12818,11 @@ Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.p
       });
       core.setFailed(`Deployment failed on step: ${latestStage.name}!`);
       await updateDeployment(token, deployment, "failure");
+      return;
+    }
+    if (latestStage.status === "skipped") {
+      waiting = false;
+      core.setOutput(`Deployment skipped ${latestStage.name}!`);
       return;
     }
     if (latestStage.name === "deploy" && ["success", "failed"].includes(latestStage.status)) {
