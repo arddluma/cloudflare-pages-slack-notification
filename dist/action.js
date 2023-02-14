@@ -12820,11 +12820,6 @@ Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.p
       await updateDeployment(token, deployment, "failure");
       return;
     }
-    if (latestStage.status === "skipped") {
-      waiting = false;
-      core.setOutput(`Deployment skipped ${latestStage.name}!`);
-      return;
-    }
     if (latestStage.name === "deploy" && ["success", "failed"].includes(latestStage.status)) {
       waiting = false;
       const aliasUrl = deployment.aliases && deployment.aliases.length > 0 ? deployment.aliases[0] : deployment.url;
