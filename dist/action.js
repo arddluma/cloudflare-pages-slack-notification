@@ -12767,6 +12767,7 @@ var waiting = true;
 var ghDeployment;
 var markedAsInProgress = false;
 async function run() {
+  var _a2, _b, _c;
   const accountEmail = core.getInput("accountEmail", { required: false, trimWhitespace: true });
   const apiKey = core.getInput("apiKey", { required: false, trimWhitespace: true });
   const apiToken = core.getInput("apiToken", { required: false, trimWhitespace: true });
@@ -12776,6 +12777,8 @@ async function run() {
   const commitHash = core.getInput("commitHash", { required: false, trimWhitespace: true });
   const slackWebHook = core.getInput("slackWebHook", { required: false, trimWhitespace: true });
   const slack = esm_default(slackWebHook);
+  const commitUrl = ((_b = (_a2 = import_utils.context.payload) == null ? void 0 : _a2.head_commit) == null ? void 0 : _b.url) || "";
+  const actor = ((_c = import_utils.context) == null ? void 0 : _c.actor) || "";
   if (!validateAuthInputs(apiToken, accountEmail, apiKey)) {
     return;
   }
@@ -12806,19 +12809,53 @@ async function run() {
     }
     if (latestStage.status === "failed" || latestStage.status === "failure") {
       waiting = false;
-      slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!
+      if (slackWebHook) {
+        const logs = await getCloudflareLogs(authHeaders, accountId, project, deployment.id);
+        slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!
 Environment: *${deployment.environment}*
-Commit: ${import_utils.context.payload.head_commit.url}
-Actor: *${import_utils.context.actor}*
+Commit: ${commitUrl}
+Actor: *${actor}*
 Deployment ID: *${deployment.id}*
-Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
-        console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
-      }).catch((err) => {
-        console.error(err);
-      });
+Deployment Logs: ${logs}
+`).then(() => {
+          console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
+        }).catch((err) => {
+          console.error(err);
+        });
+      }
       core.setFailed(`Deployment failed on step: ${latestStage.name}!`);
       await updateDeployment(token, deployment, "failure");
       return;
+    }
+    async function getCloudflareLogs(authHeaders2, accountId2, project2, deploymentId) {
+      var _a3;
+      try {
+        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId2}/pages/projects/${project2}/deployments/${deploymentId}/history/logs`, {
+          headers: { ...authHeaders2 }
+        });
+        if (!res.ok) {
+          console.error(`Failed to fetch Cloudflare logs - Status code: ${res.status} (${res.statusText})`);
+          return "";
+        }
+        const body = await res.json();
+        if (Array.isArray((_a3 = body.result) == null ? void 0 : _a3.data) && body.result.data.length > 0) {
+          const logs = body.result.data.map((log) => {
+            return {
+              line: log.line
+            };
+          });
+          const last20Logs = logs.slice(-20);
+          const formattedLogs = last20Logs.map((log) => {
+            return `${log.line}`;
+          });
+          return "```" + formattedLogs.join("\n") + "\n```";
+        } else {
+          return "";
+        }
+      } catch (error2) {
+        console.error(`Failed to fetch Cloudflare logs: ${error2.message}`);
+        return "";
+      }
     }
     if (latestStage.name === "deploy" && ["success", "failed"].includes(latestStage.status)) {
       waiting = false;
@@ -12831,8 +12868,8 @@ Checkout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.p
       if (deployment.latest_stage.status === "success" && true) {
         slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!
 Environment: *${deployment.environment}*
-Commit: ${import_utils.context.payload.head_commit.url}
-Actor: *${import_utils.context.actor}*
+Commit: ${commitUrl}
+Actor: *${actor}*
 Deployment ID: *${deployment.id}*
 Alias URL: ${aliasUrl}
 Deployment URL: ${deployment.url}

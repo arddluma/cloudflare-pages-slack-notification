@@ -22,6 +22,8 @@ export default async function run() {
   const commitHash = core.getInput('commitHash', { required: false, trimWhitespace: true });
   const slackWebHook = core.getInput('slackWebHook', { required: false, trimWhitespace: true });
   const slack = SlackNotify(slackWebHook);
+  const commitUrl = context.payload?.head_commit?.url || '';
+  const actor = context?.actor || '';
 
   // Validate we have either token or both email + key
   if (!validateAuthInputs(apiToken, accountEmail, apiKey)) {
@@ -64,16 +66,55 @@ export default async function run() {
 
     if (latestStage.status === 'failed' || latestStage.status === 'failure') {
       waiting = false;
-      slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
-        console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
-      }).catch((err) => {
-        console.error(err);
-      });
+
+      if (slackWebHook) {
+        const logs = await getCloudflareLogs(authHeaders, accountId, project, deployment.id);
+        slack.send(`:x: CloudFlare Pages \`${latestStage.name}\` pipeline for project *${project}* \`FAILED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${commitUrl}\nActor: *${actor}*\nDeployment ID: *${deployment.id}*\nDeployment Logs: ${logs}\n`).then(() => {
+          console.log(`Slack message for ${latestStage.name} failed pipeline sent!`);
+        }).catch((err) => {
+          console.error(err);
+        });
+      }
       core.setFailed(`Deployment failed on step: ${latestStage.name}!`);
       await updateDeployment(token, deployment, 'failure');
       return;
     }
+    async function getCloudflareLogs(authHeaders: AuthHeaders, accountId: string, project: string, deploymentId: string): Promise<string> {
+      try {
+        const res: Response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${project}/deployments/${deploymentId}/history/logs`, {
+          headers: { ...authHeaders },
+        });
     
+        if (!res.ok) {
+          console.error(`Failed to fetch Cloudflare logs - Status code: ${res.status} (${res.statusText})`);
+          return '';
+        }
+    
+        const body = await res.json();
+    
+        if (Array.isArray(body.result?.data) && body.result.data.length > 0) {
+          const logs = body.result.data.map((log: any) => {
+            return {
+              line: log.line,
+            };
+          });
+    
+          const last20Logs = logs.slice(-20);
+    
+          const formattedLogs = last20Logs.map((log) => {
+            return `${log.line}`;
+          });
+    
+          return '```' + formattedLogs.join('\n') + '\n```';
+        } else {
+          return '';
+        }
+      } catch (error) {
+        console.error(`Failed to fetch Cloudflare logs: ${error.message}`);
+        return '';
+      }
+    }
+        
     if (latestStage.name === 'deploy' && ['success', 'failed'].includes(latestStage.status)) {
       waiting = false;
 
@@ -87,7 +128,7 @@ export default async function run() {
       core.setOutput('success', deployment.latest_stage.status === 'success' ? true : false);
 
       if (deployment.latest_stage.status === 'success' && true) {
-        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${context.payload.head_commit.url}\nActor: *${context.actor}*\nDeployment ID: *${deployment.id}*\nAlias URL: ${aliasUrl}\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
+        slack.send(`:white_check_mark: CloudFlare Pages \`Deployment\` pipeline for project *${project}* \`SUCCEEDED\`!\nEnvironment: *${deployment.environment}*\nCommit: ${commitUrl}\nActor: *${actor}*\nDeployment ID: *${deployment.id}*\nAlias URL: ${aliasUrl}\nDeployment URL: ${deployment.url}\nCheckout <https://dash.cloudflare.com?to=/${accountId}/pages/view/${deployment.project_name}/${deployment.id}|build logs>`).then(() => {
           console.log('Slack message for DEPLOYMENT succedded pipeline sent!');
         }).catch((err) => {
           console.error(err);
